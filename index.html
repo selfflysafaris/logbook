@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Logbook">
+<meta name="theme-color" content="#1F3A5F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>SelfFly Logbook</title>
+<style>
+:root{
+  --bg:#f3f5f8;--card:#fff;--ink:#14202e;--mute:#5d6b7c;--line:#d8dee6;
+  --brand:#1F3A5F;--brand2:#2E5C8A;--accent:#2E8B57;
+  --ok:#1e7a46;--okbg:#dff3e6;--warn:#8a5a00;--warnbg:#ffe9b8;--bad:#a1281c;--badbg:#f9d4cf;
+  --inp:#fff;--inpb:#b8c2cf;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1620;--card:#18222f;--ink:#e8eef5;--mute:#93a3b5;--line:#2b394a;
+    --brand:#3b6aa3;--brand2:#5b8bc4;--accent:#49b878;
+    --ok:#7fdca2;--okbg:#17382a;--warn:#ffcf70;--warnbg:#3d3010;--bad:#ff9d92;--badbg:#431c18;
+    --inp:#101a26;--inpb:#3a4b60;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1620;--card:#18222f;--ink:#e8eef5;--mute:#93a3b5;--line:#2b394a;
+  --brand:#3b6aa3;--brand2:#5b8bc4;--accent:#49b878;
+  --ok:#7fdca2;--okbg:#17382a;--warn:#ffcf70;--warnbg:#3d3010;--bad:#ff9d92;--badbg:#431c18;
+  --inp:#101a26;--inpb:#3a4b60;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+header h1{margin:0;font-size:18px;font-weight:650}
+header .sub{font-size:12px;opacity:.85}
+#banner{margin:0;padding:9px 16px;font-size:14px;font-weight:600}
+#banner.ok{background:var(--okbg);color:var(--ok)}
+#banner.warn{background:var(--warnbg);color:var(--warn)}
+#banner.bad{background:var(--badbg);color:var(--bad)}
+main{max-width:760px;margin:0 auto;padding:12px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+.card h2{margin:0 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand2)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid .full{grid-column:1/-1}
+label.f{display:block;font-size:12px;color:var(--mute);font-weight:600}
+label.f span.req{color:var(--bad)}
+input,select,textarea,button{font:inherit}
+input[type=text],input[type=date],input[type=datetime-local],input[type=number],select,textarea{
+  width:100%;margin-top:3px;padding:11px 10px;border:1px solid var(--inpb);border-radius:10px;background:var(--inp);color:var(--ink);font-size:16px;min-height:44px;-webkit-appearance:none;appearance:none}
+textarea{min-height:76px;resize:vertical}
+input:disabled,input[readonly]{opacity:.7}
+input.auto{border-style:dashed}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:650;min-height:46px;background:var(--brand);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--brand2);border:1px solid var(--brand2)}
+button.dng{background:var(--bad);color:#fff}
+button.sm{min-height:36px;padding:6px 12px;font-size:14px;border-radius:9px}
+button:disabled{opacity:.5}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:transparent;color:var(--mute);border-radius:0;min-height:58px;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav button .ic{font-size:20px;line-height:1}
+nav button.on{color:var(--brand2)}
+.item{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .m{flex:1;min-width:0}
+.item .t{font-weight:650}
+.item .s{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;white-space:nowrap}
+.pill.new{background:var(--badbg);color:var(--bad)}
+.pill.exp{background:var(--warnbg);color:var(--warn)}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.hint{font-size:13px;color:var(--mute);margin:6px 0 0}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.stat:last-child{border-bottom:0}
+table.lim{width:100%;border-collapse:collapse;font-size:14px}
+table.lim th{font-size:11px;text-transform:uppercase;color:var(--mute);text-align:right;padding:4px 4px}
+table.lim th:first-child,table.lim td:first-child{text-align:left}
+table.lim td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.st{font-weight:700;border-radius:8px;padding:2px 7px;font-size:12px}
+.st.OK{background:var(--okbg);color:var(--ok)}
+.st.WARN{background:var(--warnbg);color:var(--warn)}
+.st.BAD{background:var(--badbg);color:var(--bad)}
+.st.NA{color:var(--mute)}
+.tog{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.tog input{width:22px;height:22px;flex:none}
+.tog span{flex:1}
+.tog small{color:var(--mute)}
+.gh{display:flex;align-items:center;justify-content:space-between;margin:14px 0 2px;font-weight:700;color:var(--brand2)}
+.hide{display:none!important}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:60;background:#14202e;color:#fff;border-radius:12px;padding:12px 14px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.err{color:var(--bad);font-size:13px;margin:6px 0 0;font-weight:600}
+.disc{font-size:12px;color:var(--bad);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>SelfFly Logbook</h1>
+  <div class="sub" id="hdrSub">Flights are stored on this device</div>
+</header>
+<div id="banner" class="warn">Loading…</div>
+<main id="main"></main>
+<nav id="nav"></nav>
+<div id="toast" class="toast hide"></div>
+
+<script>
+"use strict";
+/* ===================================================================
+   SelfFly Logbook — offline phone entry app
+   Data stays on this device. Nothing is sent anywhere.
+   =================================================================== */
+const APP_VERSION = "1.0.0";
+const RETAIN_DAYS = 90;
+
+/* ---------- safe storage ---------- */
+const mem = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? (k in mem ? mem[k] : d) : JSON.parse(v); }catch(e){ return (k in mem) ? mem[k] : d; } },
+  set(k, v){ mem[k] = v; try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+
+/* ---------- field registry (key = Excel Logbook column header) ---------- */
+// [key, label, group, type, opts]
+const FIELDS = [
+ ["Date","Date","Flight","date",{req:1}],
+ ["Registration","Registration","Flight","text",{list:"regs",upper:1}],
+ ["Type","Type","Flight","text",{upper:1,auto:1}],
+ ["Aircraft model","Aircraft model","Flight","text",{auto:1}],
+ ["From","From","Flight","text",{list:"airports",upper:1}],
+ ["To","To","Flight","text",{list:"airports",upper:1}],
+ ["Via","Via (space separated)","Flight","text",{upper:1,full:1}],
+ ["Entry type","Entry type","Flight","sel",{opts:["Flight","Simulator","Prior experience"]}],
+ ["Operation","Operation","Flight","sel",{opts:["Part 121","Part 135","Part 91","Instruction","Other","Not specified"]}],
+ ["Total time","Total time (block)","Time","dur",{}],
+ ["PIC","PIC","Time","dur",{}],
+ ["PIC night","PIC night","Time","dur",{}],
+ ["SIC","SIC","Time","dur",{}],
+ ["SIC night","SIC night","Time","dur",{}],
+ ["P1 u/s","P1 u/s","Time","dur",{}],
+ ["P1 u/s night","P1 u/s night","Time","dur",{}],
+ ["Dual received","Dual received","Time","dur",{}],
+ ["Dual rec. night","Dual rec. night","Time","dur",{}],
+ ["Dual given (instructor)","Dual given (instructor)","Time","dur",{}],
+ ["Night","Night","Time","dur",{}],
+ ["Cross-country","Cross-country","Time","dur",{}],
+ ["X-country night","X-country night","Time","dur",{}],
+ ["Instrument (total)","Instrument (total)","Time","dur",{}],
+ ["Actual instrument","Actual instrument","Time","dur",{}],
+ ["Simulated instrument","Simulated instrument","Time","dur",{}],
+ ["Simulator","Simulator","Time","dur",{}],
+ ["Multi-pilot","Multi-pilot","Time","dur",{}],
+ ["Air time","Air time","Time","dur",{}],
+ ["Day T/O","Day take-offs","Take-offs & landings","int",{}],
+ ["Night T/O","Night take-offs","Take-offs & landings","int",{}],
+ ["Day ldg","Day landings","Take-offs & landings","int",{}],
+ ["Night ldg","Night landings","Take-offs & landings","int",{}],
+ ["Total ldg","Total landings","Take-offs & landings","int",{auto:1}],
+ ["Holds","Holds","Take-offs & landings","int",{}],
+ ["Appr ILS","ILS","Instrument approaches","int",{}],
+ ["Appr LOC","LOC","Instrument approaches","int",{}],
+ ["Appr VOR","VOR","Instrument approaches","int",{}],
+ ["Appr NDB","NDB","Instrument approaches","int",{}],
+ ["Appr RNAV","RNAV","Instrument approaches","int",{}],
+ ["Appr GPS/GNSS","GPS/GNSS","Instrument approaches","int",{}],
+ ["Appr Visual","Visual","Instrument approaches","int",{}],
+ ["Appr Other","Other","Instrument approaches","int",{}],
+ ["Approach detail","Approach detail","Instrument approaches","text",{full:1}],
+ ["On duty","On duty (UTC)","Duty (UTC)","dt",{}],
+ ["Off duty","Off duty (UTC)","Duty (UTC)","dt",{}],
+ ["Total duty (as stored)","Total duty","Duty (UTC)","dur",{auto:1}],
+ ["Split duty","Split duty","Duty (UTC)","yn",{}],
+ ["Total duty day","Total duty day","Duty (UTC)","yn",{}],
+ ["PIC (name)","PIC (name)","Crew","text",{list:"people"}],
+ ["SIC (name)","SIC (name)","Crew","text",{list:"people"}],
+ ["Instructor","Instructor","Crew","text",{list:"people"}],
+ ["Student","Student","Crew","text",{list:"people"}],
+ ["Remarks","Remarks","Notes","area",{full:1}],
+ ["Route","Route","Notes","text",{full:1}],
+ ["Flight no.","Flight no.","Notes","text",{}],
+ ["Distance (as stored)","Distance (nm)","Notes","int",{}],
+ ["Category","Category","Classification","text",{list:"cats"}],
+ ["Class","Class","Classification","text",{list:"classes"}],
+ ["Engine","Engine","Classification","text",{list:"engines"}],
+ ["Pilot flying","Pilot flying","Classification","yn",{}],
+ ["FAA Part 121 flag (LogTen)","FAA Part 121 flag","Classification","yn",{}],
+ ["Flagged","Flagged","Classification","yn",{}],
+ ["Take-off","Take-off (UTC)","Times (UTC)","dt",{}],
+ ["Landing","Landing (UTC)","Times (UTC)","dt",{}],
+ ["Actual out","Actual out (UTC)","Times (UTC)","dt",{}],
+ ["Actual in","Actual in (UTC)","Times (UTC)","dt",{}],
+ ["Sched. dep","Scheduled dep (UTC)","Times (UTC)","dt",{}],
+ ["Sched. arr","Scheduled arr (UTC)","Times (UTC)","dt",{}],
+ ["Sched. total","Scheduled total","Times (UTC)","dur",{}],
+ ["Custom time 1","Custom time 1","Custom","dur",{}],
+ ["Custom time 2","Custom time 2","Custom","dur",{}],
+ ["Custom time 3","Custom time 3","Custom","dur",{}],
+];
+const FKEY = {}; FIELDS.forEach(f => FKEY[f[0]] = f);
+const GROUPS = []; FIELDS.forEach(f => { if(!GROUPS.includes(f[2])) GROUPS.push(f[2]); });
+
+const PRESETS = {
+  "Quick": ["Date","Registration","Type","From","To","Operation","Entry type","Total time","PIC","Day ldg","Night ldg","Total ldg","On duty","Off duty","Remarks"],
+  "Standard": ["Date","Registration","Type","Aircraft model","From","To","Via","Entry type","Operation","Total time","PIC","SIC","Dual received","Dual given (instructor)","Night","Cross-country","Instrument (total)","Actual instrument","Day ldg","Night ldg","Total ldg","Appr ILS","Appr RNAV","Appr GPS/GNSS","Appr VOR","On duty","Off duty","PIC (name)","SIC (name)","Remarks","Flight no."],
+  "Everything": FIELDS.map(f => f[0])
+};
+
+/* ---------- limits defaults (mirrors the workbook “Limits Setup” sheet) ---------- */
+const REGIMES = ["South Africa – Part 121","South Africa – Part 135","Namibia – Part 121","Namibia – Part 135","Mozambique – Part 121","Mozambique – Part 135"];
+const LIM_ROWS = [ // key, label, window, unit
+  ["ft24","Flight time – 24 h",1,"h"],["ft7","Flight time – 7 days",7,"h"],["ft28","Flight time – 28 days",28,"h"],
+  ["ft30","Flight time – 30 days",30,"h"],["ft90","Flight time – 90 days",90,"h"],["ft365","Flight time – 365 days",365,"h"],
+  ["d7","Duty – 7 days",7,"h"],["d14","Duty – 14 days",14,"h"],["d28","Duty – 28 days",28,"h"],
+  ["rest","Minimum rest",null,"h"],["maxdays","Max consecutive duty days",null,"d"],["minoff14","Min days off in 14",null,"d"]
+];
+function defaultLimits(){
+  const sa = {ft7:40, ft30:120, ft90:300, ft365:1000, d7:60, d28:200, rest:10, maxdays:7, minoff14:2};
+  const na = Object.assign({}, sa, {d7:55, d14:95, d28:190, rest:12});
+  const cols = [sa, sa, na, na, sa, sa];
+  return {
+    regimes: REGIMES.slice(),
+    values: cols.map(c => Object.assign({}, c)),
+    verified: REGIMES.map(() => "No"),
+    fdp: [[0,[11,10.25,9.5,9,9,9,9,9]],[5,[13,12.25,11.5,10.75,10,9.25,9,9]],[7,[14,13.25,12.5,11.75,11,10.25,9.5,9]],
+          [14,[13,12.25,11.5,10.75,10,9.25,9,9]],[21,[12,11.25,10.5,9.75,9,9,9,9]],[22,[11,10.25,9.5,9,9,9,9,9]]]
+  };
+}
+
+/* ---------- state ---------- */
+let flights = store.get("sf_flights", []);
+let prefs = Object.assign({
+  visible: PRESETS["Standard"].slice(), preset: "Standard", warnDays: 7, autoPIC: true, autoXC: false,
+  defOp: "Part 135", offset: 2, regime: 0, basis: "All operations", theme: "auto"
+}, store.get("sf_prefs", {}));
+let ref = store.get("sf_ref", null);
+let meta = Object.assign({lastExport: null, lastRef: null}, store.get("sf_meta", {}));
+let tab = "add";
+let editing = null;      // flight id being edited or null
+let draft = {};          // current form values (internal repr)
+let touched = new Set(); // fields the user changed by hand
+let autoSet = new Set(); // fields filled automatically
+let limitsAsat = null;
+
+function persist(){
+  const ok = store.set("sf_flights", flights);
+  store.set("sf_flights_bak", flights);
+  store.set("sf_prefs", prefs);
+  store.set("sf_meta", meta);
+  if(!ok) toast("⚠ Could not save to device storage — export now!");
+}
+
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const pad = n => String(n).padStart(2,"0");
+function todayStr(){ const d = new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function dayNum(s){ const [y,m,d] = s.slice(0,10).split("-").map(Number); return Math.round(Date.UTC(y,m-1,d)/86400000); }
+function numDay(n){ const d = new Date(n*86400000); return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate()); }
+function dtMs(s){ if(!s) return null; const m = s.match(/^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)/); if(!m) return null; return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]); }
+function fmtHM(min){ if(min==null||isNaN(min)) return ""; const neg = min<0; min = Math.abs(Math.round(min)); return (neg?"-":"")+Math.floor(min/60)+":"+pad(min%60); }
+function parseDur(t){
+  t = String(t||"").trim(); if(!t) return null;
+  if(/^\d+:\d{1,2}$/.test(t)){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+  if(/^\d*[.,]\d+$/.test(t) || /^\d+[.,]$/.test(t)){ return Math.round(parseFloat(t.replace(",","."))*60); }
+  if(/^\d{1,2}$/.test(t)) return Number(t)*60;
+  if(/^\d{3,4}$/.test(t)){ const m = Number(t.slice(-2)), h = Number(t.slice(0,-2)); return h*60+m; }
+  return NaN;
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function newId(){ return "APP-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,7).toUpperCase(); }
+function daysSince(iso){ if(!iso) return null; return Math.floor((Date.now()-new Date(iso).getTime())/86400000); }
+let toastT;
+function toast(msg, ms=3200){ const t = $("#toast"); t.textContent = msg; t.classList.remove("hide"); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.add("hide"), ms); }
+
+/* ---------- reference data ---------- */
+function refList(name){
+  if(!ref) return [];
+  if(name==="regs") return (ref.aircraft||[]).map(a=>a.reg);
+  if(name==="airports") return (ref.airports||[]).map(a=>a.code);
+  if(name==="people") return ref.people||[];
+  if(name==="cats") return ref.categories||["Airplane","Simulator"];
+  if(name==="classes") return ref.classes||["Single-Engine Land","Multi-Engine Land"];
+  if(name==="engines") return ref.engines||["Reciprocating","Turbine","Turbo-prop"];
+  return [];
+}
+function aircraftByReg(r){ if(!ref||!r) return null; r = r.trim().toUpperCase(); return (ref.aircraft||[]).find(a => String(a.reg).toUpperCase()===r)||null; }
+
+/* ---------- banner / status ---------- */
+function counts(){
+  const c = {new:0, exported:0, confirmed:0};
+  flights.forEach(f => c[f.state]++);
+  return c;
+}
+function updateBanner(){
+  const c = counts(), b = $("#banner");
+  const dExp = daysSince(meta.lastExport);
+  const lim = prefs.warnDays;
+  let cls = "ok", msg = "";
+  if(c.new>0){
+    if(meta.lastExport==null || dExp>=lim){
+      cls="bad"; msg = `⚠ ${c.new} flight${c.new>1?"s":""} NOT exported yet` + (meta.lastExport? ` — last export ${dExp} days ago` : " — you have never exported") + ". Go to Sync → Export.";
+    } else { cls="warn"; msg = `${c.new} flight${c.new>1?"s":""} not exported yet — export before you forget (Sync tab).`; }
+  } else if(c.exported>0 && (dExp==null || dExp>=lim)){
+    cls="warn"; msg = `${c.exported} exported flight${c.exported>1?"s":""} not yet confirmed in Excel — run the PC updater, then load logbook_ref.json (Sync tab).`;
+  } else if(c.exported>0){
+    cls="warn"; msg = `All exported ✓ — ${c.exported} awaiting Excel confirmation (run the PC updater).`;
+  } else {
+    cls="ok"; msg = flights.length ? `All flights are in Excel ✓ (${flights.length} stored on this device)` : "No flights stored yet.";
+  }
+  b.className = cls; b.textContent = msg;
+  $("#hdrSub").textContent = (ref? "Reference data loaded "+(meta.lastRef? "· "+meta.lastRef.slice(0,10):"") : "No reference file loaded yet (Sync tab)") + "  ·  v"+APP_VERSION;
+}
+
+/* ---------- navigation ---------- */
+const TABS = [["add","✏️","Add"],["log","📒","Flights"],["limits","⏱","Limits"],["sync","🔄","Sync"],["setup","⚙️","Setup"]];
+function renderNav(){
+  $("#nav").innerHTML = TABS.map(([k,ic,lab]) => `<button class="${tab===k?"on":""}" data-t="${k}"><span class="ic">${ic}</span>${lab}</button>`).join("");
+  $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => go(b.dataset.t));
+}
+function go(t){ tab = t; render(); window.scrollTo(0,0); }
+function render(){
+  renderNav(); updateBanner();
+  const m = $("#main");
+  if(tab==="add") renderAdd(m);
+  else if(tab==="log") renderLog(m);
+  else if(tab==="limits") renderLimits(m);
+  else if(tab==="sync") renderSync(m);
+  else renderSetup(m);
+}
+
+/* ===================================================================
+   ADD / EDIT
+   =================================================================== */
+function blankDraft(){
+  const last = flights.slice().sort((a,b)=> (a.f.Date||"").localeCompare(b.f.Date||"") || (a.created||"").localeCompare(b.created||"")).pop();
+  const d = {Date: todayStr(), "Entry type":"Flight", Operation: prefs.defOp};
+  if(last){
+    ["Registration","Type","Aircraft model","Category","Class","Engine"].forEach(k => { if(last.f[k]) d[k] = last.f[k]; });
+    if(last.f.To) d.From = last.f.To;
+    if(last.f.Operation) d.Operation = last.f.Operation;
+  }
+  return d;
+}
+function nextLegDraft(f){
+  const d = {Date:f.Date, "Entry type":f["Entry type"]||"Flight", Operation:f.Operation};
+  ["Registration","Type","Aircraft model","Category","Class","Engine","PIC (name)","SIC (name)","On duty","Off duty","Split duty","Total duty day","Total duty (as stored)"].forEach(k => { if(f[k]!=null && f[k]!=="") d[k] = f[k]; });
+  if(f.To) d.From = f.To;
+  return d;
+}
+function startNew(d){ editing = null; draft = d || blankDraft(); touched = new Set(); autoSet = new Set(); tab="add"; render(); }
+function startEdit(id){
+  const fl = flights.find(x => x.id===id); if(!fl) return;
+  editing = id; draft = JSON.parse(JSON.stringify(fl.f)); touched = new Set(Object.keys(draft)); autoSet = new Set(); tab="add"; render(); window.scrollTo(0,0);
+}
+
+function fieldHTML(def){
+  const [key,label,group,type,o] = def;
+  const v = draft[key];
+  const full = (o.full || type==="area" || type==="dt") ? " full" : "";
+  const req = o.req ? ' <span class="req">*</span>' : "";
+  const ac = autoSet.has(key) ? " auto" : "";
+  const id = "f_"+FIELDS.indexOf(def);
+  let inner = "";
+  if(type==="date") inner = `<input type="date" id="${id}" data-k="${esc(key)}" value="${esc(v||"")}">`;
+  else if(type==="dt") inner = `<input type="datetime-local" id="${id}" data-k="${esc(key)}" value="${esc(v||"")}">`;
+  else if(type==="dur") inner = `<input type="text" inputmode="decimal" autocomplete="off" placeholder="h:mm or 1.5" id="${id}" class="${ac}" data-k="${esc(key)}" value="${esc(v==null?"":fmtHM(v))}">`;
+  else if(type==="int") inner = `<input type="number" inputmode="numeric" min="0" step="1" id="${id}" class="${ac}" data-k="${esc(key)}" value="${v==null?"":esc(v)}">`;
+  else if(type==="sel") inner = `<select id="${id}" data-k="${esc(key)}">${o.opts.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("")}</select>`;
+  else if(type==="yn") inner = `<select id="${id}" data-k="${esc(key)}"><option value=""></option><option${v==="Yes"?" selected":""}>Yes</option></select>`;
+  else if(type==="area") inner = `<textarea id="${id}" data-k="${esc(key)}">${esc(v||"")}</textarea>`;
+  else inner = `<input type="text" id="${id}" class="${ac}" data-k="${esc(key)}" autocomplete="off" autocapitalize="${o.upper?"characters":"sentences"}" ${o.list?`list="dl_${o.list}"`:""} value="${esc(v||"")}">`;
+  return `<label class="f${full}">${esc(label)}${req}${inner}</label>`;
+}
+
+function renderAdd(m){
+  const vis = new Set(prefs.visible);
+  vis.add("Date");
+  let html = "";
+  html += `<div class="card"><div class="row"><div><b>${editing? "Edit flight":"New flight"}</b><div class="hint">${editing? "Changes mark it as needing re-export.":"Pre-filled from your last flight. Dashed boxes were filled automatically."}</div></div></div></div>`;
+  GROUPS.forEach(g => {
+    const fs = FIELDS.filter(f => f[2]===g && vis.has(f[0]));
+    if(!fs.length) return;
+    html += `<section class="card"><h2>${esc(g)}</h2><div class="grid">${fs.map(fieldHTML).join("")}</div></section>`;
+  });
+  html += `<div id="formErr" class="err"></div>`;
+  html += `<div class="card"><div class="row">
+      <button id="btnSave">${editing? "Save changes":"Save flight"}</button>
+      <button id="btnNext" class="sec">Save + next leg</button>
+      ${editing? '<button id="btnCancel" class="sec">Cancel</button>':'<button id="btnClear" class="sec">Clear form</button>'}
+    </div><p class="hint">Fields hidden here can be switched on in Setup.</p></div>`;
+  ["regs","airports","people","cats","classes","engines"].forEach(n => {
+    html += `<datalist id="dl_${n}">${refList(n).map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`;
+  });
+  m.innerHTML = html;
+  m.querySelectorAll("[data-k]").forEach(el => {
+    el.addEventListener("change", () => onField(el));
+    if(el.tagName==="INPUT" && el.type==="text" && FKEY[el.dataset.k] && FKEY[el.dataset.k][4].upper)
+      el.addEventListener("input", () => { const p = el.selectionStart; el.value = el.value.toUpperCase(); try{el.setSelectionRange(p,p);}catch(e){} });
+  });
+  $("#btnSave").onclick = () => saveFlight(false);
+  $("#btnNext").onclick = () => saveFlight(true);
+  if($("#btnCancel")) $("#btnCancel").onclick = () => { editing=null; go("log"); };
+  if($("#btnClear")) $("#btnClear").onclick = () => startNew(blankDraft());
+}
+
+function setDraft(key, val, markAuto){
+  if(val===null || val===undefined || val==="" || (typeof val==="number" && isNaN(val))) delete draft[key]; else draft[key] = val;
+  if(markAuto) autoSet.add(key); else autoSet.delete(key);
+  const idx = FIELDS.indexOf(FKEY[key]);
+  const el = document.getElementById("f_"+idx);
+  if(el){
+    const t = FKEY[key][3];
+    el.value = draft[key]==null ? "" : (t==="dur" ? fmtHM(draft[key]) : draft[key]);
+    el.classList.toggle("auto", !!markAuto);
+  }
+}
+function canAuto(key){ return !touched.has(key) || autoSet.has(key); }
+
+function onField(el){
+  const key = el.dataset.k, def = FKEY[key], type = def[3];
+  let val = el.value;
+  if(type==="dur"){
+    const p = parseDur(val);
+    if(Number.isNaN(p)){ el.value = ""; delete draft[key]; toast("Time not understood — use h:mm (e.g. 1:30) or 1.5"); return; }
+    if(p==null) delete draft[key]; else draft[key] = p;
+    el.value = p==null ? "" : fmtHM(p);
+  } else if(type==="int"){
+    if(val==="") delete draft[key]; else draft[key] = Math.max(0, parseInt(val,10)||0);
+  } else {
+    if(def[4].upper) val = val.toUpperCase().trim();
+    if(val==="") delete draft[key]; else draft[key] = val;
+    el.value = val;
+  }
+  touched.add(key); autoSet.delete(key); el.classList.remove("auto");
+  autoRules(key);
+}
+
+function autoRules(key){
+  const d = draft;
+  if(key==="Registration"){
+    const a = aircraftByReg(d.Registration);
+    if(a){ if(a.type) setDraft("Type", a.type, true); if(a.model) setDraft("Aircraft model", a.model, true); }
+  }
+  if(key==="Day ldg" || key==="Night ldg"){
+    const t = (d["Day ldg"]||0) + (d["Night ldg"]||0);
+    setDraft("Total ldg", t||null, true);
+  }
+  if(key==="Actual out" || key==="Actual in"){
+    const a = dtMs(d["Actual out"]), b = dtMs(d["Actual in"]);
+    if(a!=null && b!=null && b>a && canAuto("Total time")){ setDraft("Total time", Math.round((b-a)/60000), true); autoRules("Total time"); }
+  }
+  if(key==="Take-off" || key==="Landing"){
+    const a = dtMs(d["Take-off"]), b = dtMs(d["Landing"]);
+    if(a!=null && b!=null && b>a && canAuto("Air time")) setDraft("Air time", Math.round((b-a)/60000), true);
+  }
+  if(key==="Total time" || key==="From" || key==="To"){
+    if(d["Total time"]!=null){
+      if(prefs.autoPIC && (d["Entry type"]||"Flight")==="Flight" && canAuto("PIC") && !d["SIC"] && !d["Dual received"]) setDraft("PIC", d["Total time"], true);
+      if(prefs.autoXC && d.From && d.To && d.From!==d.To && canAuto("Cross-country")) setDraft("Cross-country", d["Total time"], true);
+      if((d["Entry type"]==="Simulator") && canAuto("Simulator")) setDraft("Simulator", d["Total time"], true);
+    }
+  }
+  if(key==="On duty" || key==="Off duty"){
+    const a = dtMs(d["On duty"]), b = dtMs(d["Off duty"]);
+    if(a!=null && b!=null && b>a) setDraft("Total duty (as stored)", Math.round((b-a)/60000), true);
+  }
+  if(key==="Entry type"){
+    if(d["Entry type"]==="Simulator") setDraft("Category", d.Category||"Simulator", false);
+  }
+}
+
+function validate(f){
+  if(!f.Date) return "Date is required.";
+  const et = f["Entry type"]||"Flight";
+  if(et!=="Prior experience" && !(f["Total time"]>0)) return "Enter the Total time.";
+  if(et==="Flight"){
+    if(!f.From || !f.To) return "Enter From and To.";
+    const tot = f["Total time"]||0;
+    for(const k of ["PIC","SIC","Night","Cross-country","Instrument (total)","Dual received","Dual given (instructor)"]){
+      if(f[k]!=null && f[k]>tot+1) return `${k} (${fmtHM(f[k])}) is more than Total time (${fmtHM(tot)}).`;
+    }
+  }
+  const a = dtMs(f["On duty"]), b = dtMs(f["Off duty"]);
+  if(a!=null && b!=null && b<=a) return "Off duty must be after On duty.";
+  if(f.Date > todayStr() && !confirm("This date is in the future. Save anyway?")) return "Not saved.";
+  return null;
+}
+
+function saveFlight(next){
+  const f = JSON.parse(JSON.stringify(draft));
+  if(f.Operation==="Not specified") delete f.Operation;
+  if(!f.Operation) f.Operation = "Not specified";
+  const msg = validate(f);
+  if(msg){ $("#formErr").textContent = msg; window.scrollTo({top:document.body.scrollHeight}); return; }
+  const now = new Date().toISOString();
+  if(editing){
+    const fl = flights.find(x => x.id===editing);
+    fl.f = f; fl.state = "new"; fl.updated = now;
+  } else {
+    flights.push({id:newId(), state:"new", created:now, updated:now, f});
+  }
+  purge(); persist();
+  toast("Saved ✓  (" + flights.filter(x=>x.state==="new").length + " to export)");
+  if(next){ startNew(nextLegDraft(f)); }
+  else { editing=null; draft={}; go("log"); }
+}
+
+/* ===================================================================
+   FLIGHT LIST
+   =================================================================== */
+function renderLog(m){
+  const list = flights.slice().sort((a,b)=> (b.f.Date||"").localeCompare(a.f.Date||"") || (b.created||"").localeCompare(a.created||""));
+  let html = `<div class="card"><div class="row"><button id="btnNew">+ New flight</button></div>
+     <p class="hint">Showing flights kept on this device: everything from the last ${RETAIN_DAYS} days, plus anything not yet confirmed in Excel.</p></div>`;
+  html += `<div class="card">`;
+  if(!list.length) html += `<p class="hint">No flights stored yet.</p>`;
+  list.forEach(fl => {
+    const f = fl.f, pill = fl.state==="new" ? '<span class="pill new">NOT EXPORTED</span>' : fl.state==="exported" ? '<span class="pill exp">EXPORTED</span>' : '<span class="pill ok">IN EXCEL</span>';
+    html += `<div class="item"><div class="m"><div class="t">${esc(f.Date)} · ${esc(f.From||"—")} → ${esc(f.To||"—")}</div>
+      <div class="s">${esc(f.Registration||"")} ${f["Total time"]!=null?"· "+fmtHM(f["Total time"]):""} ${f.Operation&&f.Operation!=="Not specified"?"· "+esc(f.Operation):""} ${f["Entry type"]&&f["Entry type"]!=="Flight"?"· "+esc(f["Entry type"]):""}</div></div>
+      ${pill}<button class="sec sm" data-more="${fl.id}">⋯</button></div>
+      <div class="hide row" id="act_${fl.id}" style="padding:6px 0 12px"><button class="sm" data-edit="${fl.id}">Edit</button><button class="sec sm" data-dup="${fl.id}">Duplicate</button><button class="sec sm" data-del="${fl.id}" style="color:var(--bad);border-color:var(--bad)">Delete</button></div>`;
+  });
+  html += `</div>`;
+  m.innerHTML = html;
+  $("#btnNew").onclick = () => startNew();
+  m.querySelectorAll("[data-more]").forEach(b => b.onclick = () => document.getElementById("act_"+b.dataset.more).classList.toggle("hide"));
+  m.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => startEdit(b.dataset.edit));
+  m.querySelectorAll("[data-dup]").forEach(b => b.onclick = () => { const fl = flights.find(x=>x.id===b.dataset.dup); startNew(JSON.parse(JSON.stringify(fl.f))); });
+  m.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    if(confirm("Delete this flight from the device? (If it was already exported it stays in your exported file / Excel.)")){ flights = flights.filter(x=>x.id!==b.dataset.del); persist(); render(); }
+  });
+}
+
+/* ===================================================================
+   LIMITS
+   =================================================================== */
+function limitSet(){ return (ref && ref.limits) ? ref.limits : defaultLimits(); }
+
+function allFlightsForLimits(){
+  const out = [];
+  const known = new Set(ref && ref.known_ids || []);
+  (ref && ref.history || []).forEach(h => out.push({d:h.d, t:h.t||0, e:h.e||"Flight", o:h.o||"Not specified", on:h.on||null, off:h.off||null}));
+  flights.forEach(fl => {
+    if(known.has(fl.id)) return;
+    const f = fl.f;
+    out.push({d:f.Date, t:f["Total time"]||0, e:f["Entry type"]||"Flight", o:f.Operation||"Not specified", on:f["On duty"]||null, off:f["Off duty"]||null});
+  });
+  return out.filter(x => x.d);
+}
+
+function renderLimits(m){
+  const L = limitSet();
+  const asat = limitsAsat || todayStr();
+  const ri = Math.min(prefs.regime, L.regimes.length-1);
+  const part = /Part 121$/.test(L.regimes[ri]) ? "Part 121" : "Part 135";
+  const vals = L.values[ri] || {};
+  const verified = (L.verified||[])[ri]==="Yes";
+  const data = allFlightsForLimits();
+  const pick = x => prefs.basis==="All operations" || x.o===part;
+  const A = dayNum(asat);
+  const fl = data.filter(x => x.e==="Flight" && pick(x));
+  const sumFT = w => fl.filter(x => { const n = dayNum(x.d); return n>A-w && n<=A; }).reduce((s,x)=>s+x.t,0);
+  // duty per day = first On duty to last Off duty on that day
+  const dutyDay = {};
+  fl.forEach(x => {
+    const a = dtMs(x.on), b = dtMs(x.off); if(a==null||b==null) return;
+    const n = dayNum(x.d), o = dutyDay[n] || (dutyDay[n] = {a:a,b:b});
+    o.a = Math.min(o.a,a); o.b = Math.max(o.b,b);
+  });
+  const dutyMin = n => dutyDay[n] ? Math.max(0,(dutyDay[n].b-dutyDay[n].a)/60000) : 0;
+  const sumDuty = w => { let s=0; for(let n=A-w+1;n<=A;n++) s+=dutyMin(n); return s; };
+  const sectors = d => fl.filter(x => dayNum(x.d)===d).length;
+  const status = (usedMin, lim) => {
+    if(lim==null) return ["NA","no limit set"];
+    const h = usedMin/60;
+    if(h>lim) return ["BAD","EXCEEDED"];
+    if(h>=0.9*lim) return ["WARN","≥90%"];
+    return ["OK","OK"];
+  };
+  const row = (lab, used, lim) => {
+    const [cls,txt] = status(used, lim);
+    const rem = lim==null ? "" : fmtHM(Math.max(0, lim*60-used));
+    return `<tr><td>${lab}</td><td>${fmtHM(used)||"0:00"}</td><td>${lim==null?"–":lim}</td><td>${rem}</td><td><span class="st ${cls}">${txt}</span></td></tr>`;
+  };
+  // today
+  const sec = sectors(A), dd = dutyDay[A];
+  let fdpHTML = "";
+  if(dd){
+    const fdp = (dd.b-dd.a)/60000;
+    const loc = ((dd.a/60000 + (prefs.offset||0)*60) % 1440 + 1440) % 1440;
+    const startH = loc/60;
+    let band = L.fdp[0];
+    L.fdp.forEach(b => { if(startH >= b[0]) band = b; });
+    const mx = band[1][Math.min(sec,8)-1] * 60;
+    const prevOff = Math.max(...Object.entries(dutyDay).filter(([n,o]) => o.b < dd.a).map(([n,o]) => o.b), -Infinity);
+    const rest = isFinite(prevOff) ? (dd.a - prevOff)/3600000 : null;
+    const [c1,t1] = fdp>mx ? ["BAD","EXCEEDED"] : (fdp>=mx-60 ? ["WARN","within 1 h"] : ["OK","OK"]);
+    fdpHTML = `<div class="stat"><span>Sectors</span><b>${sec}</b></div>
+      <div class="stat"><span>Duty start (UTC) → end</span><b>${new Date(dd.a).toISOString().slice(11,16)} → ${new Date(dd.b).toISOString().slice(11,16)}</b></div>
+      <div class="stat"><span>FDP actual</span><b>${fmtHM(fdp)}</b></div>
+      <div class="stat"><span>Max FDP (start ${pad(Math.floor(startH))}:${pad(Math.floor((startH%1)*60))} local, ${sec} sector${sec>1?"s":""})</span><b>${fmtHM(mx)}</b></div>
+      <div class="stat"><span>FDP remaining</span><b>${fmtHM(mx-fdp)} <span class="st ${c1}">${t1}</span></b></div>
+      <div class="stat"><span>Rest before this duty</span><b>${rest==null?"n/a":rest.toFixed(1)+" h"} ${rest!=null&&vals.rest!=null?`<span class="st ${rest<vals.rest?"BAD":"OK"}">${rest<vals.rest?"SHORT (min "+vals.rest+")":"OK (min "+vals.rest+")"}</span>`:""}</b></div>`;
+  } else fdpHTML = `<p class="hint">No duty times recorded for ${esc(asat)}. Enter On duty / Off duty on the day's flights (switch those fields on in Setup).</p>`;
+  // days worked
+  let consec = 0; while(consec<28 && sectors(A-consec)>0) consec++;
+  let off14 = 0; for(let n=A-13;n<=A;n++) if(sectors(n)===0) off14++;
+  const cs = vals.maxdays!=null ? (consec>vals.maxdays?["BAD","EXCEEDED"]:["OK","OK"]) : ["NA","–"];
+  const os = vals.minoff14!=null ? (off14<vals.minoff14?["BAD","TOO FEW"]:["OK","OK"]) : ["NA","–"];
+
+  let html = `<div class="card"><h2>Report</h2><div class="grid">
+    <label class="f full">Regime<select id="lmReg">${L.regimes.map((r,i)=>`<option value="${i}"${i===ri?" selected":""}>${esc(r)}</option>`).join("")}</select></label>
+    <label class="f">Count flying from<select id="lmBasis"><option${prefs.basis==="All operations"?" selected":""}>All operations</option><option${prefs.basis!=="All operations"?" selected":""}>Selected part only</option></select></label>
+    <label class="f">As-at date<input type="date" id="lmDate" value="${esc(asat)}"></label></div>
+    <p class="${verified?"hint":"disc"}">${verified? "Limits marked as verified by you in Excel.":"⚠ LIMITS NOT VERIFIED for this regime — confirm every figure against the regulation / your approved flight & duty scheme (Limits Setup sheet in Excel) before relying on this screen."}</p>
+    ${ref? "" : '<p class="disc">No reference file loaded: showing built-in default limits and only the flights stored on this device. Load logbook_ref.json (Sync tab) for the full picture.</p>'}</div>`;
+  html += `<div class="card"><h2>Flight time</h2><table class="lim"><tr><th>Period</th><th>Used</th><th>Limit h</th><th>Left</th><th>Status</th></tr>
+    ${row("24 h / today",sumFT(1),vals.ft24)}${row("7 days",sumFT(7),vals.ft7)}${row("28 days",sumFT(28),vals.ft28)}${row("30 days",sumFT(30),vals.ft30)}${row("90 days",sumFT(90),vals.ft90)}${row("365 days",sumFT(365),vals.ft365)}</table></div>`;
+  html += `<div class="card"><h2>Duty</h2><table class="lim"><tr><th>Period</th><th>Used</th><th>Limit h</th><th>Left</th><th>Status</th></tr>
+    ${row("7 days",sumDuty(7),vals.d7)}${row("14 days",sumDuty(14),vals.d14)}${row("28 days",sumDuty(28),vals.d28)}</table>
+    <p class="hint">Duty = first On duty to last Off duty on each day, from flights with duty times.</p></div>`;
+  html += `<div class="card"><h2>Duty day — ${esc(asat)}</h2>${fdpHTML}</div>`;
+  html += `<div class="card"><h2>Days worked / off</h2>
+    <div class="stat"><span>Consecutive days worked</span><b>${consec} <span class="st ${cs[0]}">${cs[1]}${vals.maxdays!=null?" (max "+vals.maxdays+")":""}</span></b></div>
+    <div class="stat"><span>Days off in last 14</span><b>${off14} <span class="st ${os[0]}">${os[1]}${vals.minoff14!=null?" (min "+vals.minoff14+")":""}</span></b></div></div>`;
+  m.innerHTML = html;
+  $("#lmReg").onchange = e => { prefs.regime = +e.target.value; persist(); render(); };
+  $("#lmBasis").onchange = e => { prefs.basis = e.target.value; persist(); render(); };
+  $("#lmDate").onchange = e => { limitsAsat = e.target.value || null; render(); };
+}
+
+/* ===================================================================
+   SYNC / EXPORT
+   =================================================================== */
+function purge(){
+  const cutoff = dayNum(todayStr()) - RETAIN_DAYS;
+  const before = flights.length;
+  flights = flights.filter(fl => !(fl.state==="confirmed" && fl.f.Date && dayNum(fl.f.Date) < cutoff));
+  return before - flights.length;
+}
+function exportPayload(which){
+  const list = flights.filter(fl => which==="new" ? fl.state!=="confirmed" : true);
+  return {app:"SelfFlyLogbook", version:1, exported:new Date().toISOString(), flights: list.map(fl => ({id:fl.id, created:fl.created, updated:fl.updated, f:fl.f}))};
+}
+function stamp(){ const d = new Date(); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"_"+pad(d.getHours())+pad(d.getMinutes()); }
+async function doExport(which){
+  const payload = exportPayload(which);
+  if(!payload.flights.length){ toast("Nothing to export."); return; }
+  const name = `SelfFly_flights_${stamp()}.json`;
+  const text = JSON.stringify(payload, null, 1);
+  const file = new File([text], name, {type:"application/json"});
+  let done = false;
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:"SelfFly flights", text:"SelfFly logbook export"});
+      done = true;
+    }
+  }catch(e){ if(e && e.name==="AbortError"){ toast("Share cancelled — flights NOT marked as exported."); return; } }
+  if(!done){
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text],{type:"application/json"}));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 4000);
+    done = true;
+  }
+  if(done){
+    const ids = new Set(payload.flights.map(x=>x.id));
+    flights.forEach(fl => { if(ids.has(fl.id) && fl.state==="new") fl.state = "exported"; });
+    meta.lastExport = new Date().toISOString(); persist();
+    toast(`Exported ${payload.flights.length} flight(s) ✓ — save the file somewhere safe (iCloud Drive / email).`, 5000);
+    render();
+  }
+}
+function loadRefText(text){
+  let j; try{ j = JSON.parse(text); }catch(e){ toast("That file is not valid JSON."); return; }
+  if(j && j.app==="SelfFlyLogbook" && Array.isArray(j.flights)){ restoreFlights(j); return; }
+  if(!j || !Array.isArray(j.aircraft)){ toast("Not a logbook reference file."); return; }
+  ref = j; store.set("sf_ref", ref);
+  const known = new Set(ref.known_ids||[]);
+  let n = 0;
+  flights.forEach(fl => { if(known.has(fl.id) && fl.state!=="confirmed"){ fl.state="confirmed"; n++; } });
+  meta.lastRef = new Date().toISOString();
+  const p = purge();
+  persist();
+  toast(`Reference loaded ✓ — ${n} flight(s) confirmed in Excel` + (p? `, ${p} old flight(s) cleared`:""), 5000);
+  render();
+}
+function restoreFlights(j){
+  let added = 0, skipped = 0;
+  j.flights.forEach(x => {
+    if(flights.find(fl => fl.id===x.id)){ skipped++; return; }
+    flights.push({id:x.id, state:"exported", created:x.created||new Date().toISOString(), updated:x.updated||x.created||new Date().toISOString(), f:x.f}); added++;
+  });
+  persist(); toast(`Restored ${added} flight(s)` + (skipped? `, ${skipped} already here`:""), 4500); render();
+}
+function readFile(file, cb){ const r = new FileReader(); r.onload = () => cb(String(r.result)); r.readAsText(file); }
+
+function renderSync(m){
+  const c = counts(), dExp = daysSince(meta.lastExport), dRef = daysSince(meta.lastRef);
+  let html = `<div class="card"><h2>Status</h2>
+    <div class="stat"><span>Not exported</span><b>${c.new}</b></div>
+    <div class="stat"><span>Exported, not yet confirmed in Excel</span><b>${c.exported}</b></div>
+    <div class="stat"><span>Confirmed in Excel (kept ${RETAIN_DAYS} days)</span><b>${c.confirmed}</b></div>
+    <div class="stat"><span>Last export</span><b>${meta.lastExport? (dExp===0?"today":dExp+" days ago"):"never"}</b></div>
+    <div class="stat"><span>Last Excel confirmation</span><b>${meta.lastRef? (dRef===0?"today":dRef+" days ago"):"never"}</b></div></div>`;
+  html += `<div class="card"><h2>1 · Export to Excel</h2>
+    <p class="hint">Creates a small file with your new flights. Choose <b>Save to Files</b> (iCloud Drive) or <b>Mail</b> to send it to yourself. Then run <b>Update_Logbook</b> on your PC.</p>
+    <div class="row"><button id="exNew">Export new flights</button><button id="exAll" class="sec">Export everything stored</button></div>
+    <p class="hint">“Everything” is a full safety backup — safe to run any time; the updater skips flights it already has.</p></div>`;
+  html += `<div class="card"><h2>2 · Confirm from Excel</h2>
+    <p class="hint">After the PC updater runs it saves <b>logbook_ref.json</b>. Load it here: flights are marked “in Excel”, old ones cleared after ${RETAIN_DAYS} days, and your aircraft, airports, crew and limits lists are refreshed.</p>
+    <label class="f">Choose logbook_ref.json<input type="file" id="refFile" accept=".json,application/json"></label></div>`;
+  html += `<div class="card"><h2>Fail-safe</h2>
+    <p class="hint">Lost or replaced your phone? Load an exported flights file here to restore it.</p>
+    <label class="f">Restore from an exported flights file<input type="file" id="restFile" accept=".json,application/json"></label>
+    <div class="row" style="margin-top:10px"><button id="copyJson" class="sec">Copy all flights as text</button></div>
+    <p class="hint">Last-resort: copy the text and paste it into Notes or an email.</p></div>`;
+  m.innerHTML = html;
+  $("#exNew").onclick = () => doExport("new");
+  $("#exAll").onclick = () => doExport("all");
+  $("#refFile").onchange = e => { const f = e.target.files[0]; if(f) readFile(f, loadRefText); };
+  $("#restFile").onchange = e => { const f = e.target.files[0]; if(f) readFile(f, t => { try{ const j = JSON.parse(t); if(j.app==="SelfFlyLogbook") restoreFlights(j); else toast("Not an exported flights file."); }catch(err){ toast("Could not read that file."); } }); };
+  $("#copyJson").onclick = async () => {
+    const text = JSON.stringify(exportPayload("all"));
+    try{ await navigator.clipboard.writeText(text); toast("Copied ✓"); }catch(e){ prompt("Copy this text:", text); }
+  };
+}
+
+/* ===================================================================
+   SETUP
+   =================================================================== */
+function applyTheme(){
+  const r = document.documentElement;
+  if(prefs.theme==="auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", prefs.theme);
+}
+function renderSetup(m){
+  const vis = new Set(prefs.visible);
+  let html = `<div class="card"><h2>Fields on the Add screen</h2>
+    <p class="hint">Switch fields on or off. Every field is still saved to the Excel logbook — hidden ones are just blank.</p>
+    <div class="row" style="margin-top:8px">${Object.keys(PRESETS).map(p=>`<button class="sec sm" data-preset="${p}">${p}${prefs.preset===p?" ✓":""}</button>`).join("")}</div></div>`;
+  GROUPS.forEach(g => {
+    const fs = FIELDS.filter(f => f[2]===g);
+    html += `<div class="card"><div class="gh"><span>${esc(g)}</span><span><button class="sec sm" data-all="${esc(g)}">All</button> <button class="sec sm" data-none="${esc(g)}">None</button></span></div>`;
+    fs.forEach(f => {
+      html += `<label class="tog"><input type="checkbox" data-vis="${esc(f[0])}" ${vis.has(f[0])||f[0]==="Date"?"checked":""} ${f[0]==="Date"?"disabled":""}><span>${esc(f[1])}${f[4].auto?' <small>(auto)</small>':''}</span></label>`;
+    });
+    html += `</div>`;
+  });
+  html += `<div class="card"><h2>Settings</h2><div class="grid">
+    <label class="f">Warn if not exported for (days)<input type="number" id="sWarn" min="1" max="60" value="${prefs.warnDays}"></label>
+    <label class="f">Default operation<select id="sOp">${["Part 121","Part 135","Part 91","Instruction","Other","Not specified"].map(o=>`<option${o===prefs.defOp?" selected":""}>${o}</option>`).join("")}</select></label>
+    <label class="f">Local time offset from UTC (h)<input type="number" id="sOff" step="0.5" value="${prefs.offset}"></label>
+    <label class="f">Appearance<select id="sTheme"><option value="auto"${prefs.theme==="auto"?" selected":""}>Automatic</option><option value="light"${prefs.theme==="light"?" selected":""}>Light</option><option value="dark"${prefs.theme==="dark"?" selected":""}>Dark</option></select></label></div>
+    <label class="tog"><input type="checkbox" id="sPIC" ${prefs.autoPIC?"checked":""}><span>Auto-fill PIC = Total time <small>(single-pilot flights)</small></span></label>
+    <label class="tog"><input type="checkbox" id="sXC" ${prefs.autoXC?"checked":""}><span>Auto-fill Cross-country = Total time when From ≠ To</span></label>
+    <p class="hint">Times in the duty and “(UTC)” fields are entered as UTC, same as the logbook.</p></div>`;
+  html += `<div class="card"><h2>About</h2><p class="hint">SelfFly Logbook v${APP_VERSION}. Works offline once installed: in Safari tap Share → Add to Home Screen. All flight data stays on this device until you export it.</p>
+     <button id="btnReload" class="sec">Check for app update</button></div>`;
+  m.innerHTML = html;
+  m.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => { prefs.visible = PRESETS[b.dataset.preset].slice(); prefs.preset = b.dataset.preset; persist(); render(); });
+  m.querySelectorAll("[data-vis]").forEach(cb => cb.onchange = () => {
+    const s = new Set(prefs.visible); if(cb.checked) s.add(cb.dataset.vis); else s.delete(cb.dataset.vis);
+    prefs.visible = FIELDS.map(f=>f[0]).filter(k => s.has(k)); prefs.preset = "Custom"; persist();
+  });
+  m.querySelectorAll("[data-all]").forEach(b => b.onclick = () => { const s = new Set(prefs.visible); FIELDS.filter(f=>f[2]===b.dataset.all).forEach(f=>s.add(f[0])); prefs.visible=[...s]; prefs.preset="Custom"; persist(); render(); });
+  m.querySelectorAll("[data-none]").forEach(b => b.onclick = () => { const s = new Set(prefs.visible); FIELDS.filter(f=>f[2]===b.dataset.none).forEach(f=>s.delete(f[0])); prefs.visible=[...s]; prefs.preset="Custom"; persist(); render(); });
+  $("#sWarn").onchange = e => { prefs.warnDays = Math.max(1, +e.target.value||7); persist(); updateBanner(); };
+  $("#sOp").onchange = e => { prefs.defOp = e.target.value; persist(); };
+  $("#sOff").onchange = e => { prefs.offset = +e.target.value||0; persist(); };
+  $("#sTheme").onchange = e => { prefs.theme = e.target.value; persist(); applyTheme(); };
+  $("#sPIC").onchange = e => { prefs.autoPIC = e.target.checked; persist(); };
+  $("#sXC").onchange = e => { prefs.autoXC = e.target.checked; persist(); };
+  $("#btnReload").onclick = async () => {
+    try{ const regs = await navigator.serviceWorker.getRegistrations(); for(const r of regs) await r.update(); toast("Checked. Close and reopen the app to use any update."); }catch(e){ toast("Updates are checked automatically when online."); }
+  };
+}
+
+/* ---------- boot ---------- */
+(function boot(){
+  applyTheme();
+  const p = purge(); if(p) persist();
+  draft = blankDraft();
+  render();
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+  setInterval(updateBanner, 60000);
+  document.addEventListener("visibilitychange", () => { if(!document.hidden) updateBanner(); });
+})();
+</script>
+</body>
+</html>
